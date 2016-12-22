@@ -1,6 +1,7 @@
 package com.dieam.reactnativepushnotification.modules;
 
 
+import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.Application;
 import android.app.Notification;
@@ -21,14 +22,19 @@ import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.facebook.react.ReactApplication;
+import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.bridge.ReadableMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.Arrays;
+import java.util.List;
 
+import static android.content.Context.ACTIVITY_SERVICE;
 import static com.dieam.reactnativepushnotification.modules.RNPushNotification.LOG_TAG;
+import static com.dieam.reactnativepushnotification.modules.RNPushNotification.wasReactContextCreatedByRnpnHack;
 import static com.dieam.reactnativepushnotification.modules.RNPushNotificationAttributes.fromJson;
 
 public class RNPushNotificationHelper {
@@ -129,6 +135,7 @@ public class RNPushNotificationHelper {
     }
 
     public void sendToNotificationCentre(Bundle bundle) {
+        ReactInstanceManager mReactInstanceManager;
         try {
             Class intentClass = getMainActivityClass();
             if (intentClass == null) {
@@ -343,11 +350,33 @@ public class RNPushNotificationHelper {
             // at the exact time. During testing, it was found that notifications could
             // late by many minutes.
             this.scheduleNextNotificationIfRepeating(bundle);
+            //context.destroy();
+            //if(hasRNPNcreatedRNInBackground){
+            mReactInstanceManager = ((ReactApplication) context.getApplicationContext()).getReactNativeHost().getReactInstanceManager();
+            //ifhasRNPNcreatedRNInBackground = true...
+            if(wasReactContextCreatedByRnpnHack){
+                mReactInstanceManager.destroy();
+            }
+
+
         } catch (Exception e) {
             Log.e(LOG_TAG, "failed to send push notification", e);
         }
     }
-
+    private boolean isApplicationInForeground() {
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> processInfos = activityManager.getRunningAppProcesses();
+        for (ActivityManager.RunningAppProcessInfo processInfo : processInfos) {
+            if (processInfo.processName.equals(context.getPackageName())) {
+                if (processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND || processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_BACKGROUND) {
+                    for (String d : processInfo.pkgList) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
     private void scheduleNextNotificationIfRepeating(Bundle bundle) {
         String repeatType = bundle.getString("repeatType");
         long repeatTime = (long) bundle.getDouble("repeatTime");
