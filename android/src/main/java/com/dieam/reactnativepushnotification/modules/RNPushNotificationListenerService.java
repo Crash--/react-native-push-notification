@@ -21,9 +21,10 @@ import java.util.List;
 import java.util.Random;
 
 import static com.dieam.reactnativepushnotification.modules.RNPushNotification.LOG_TAG;
+import static com.dieam.reactnativepushnotification.modules.RNPushNotification.wasReactContextCreatedByRnpnHack;
 
 public class RNPushNotificationListenerService extends GcmListenerService {
-
+    //private boolean hasRNPNcreatedRNInBackground = false;
     @Override
     public void onMessageReceived(String from, final Bundle bundle) {
         JSONObject data = getPushData(bundle.getString("data"));
@@ -70,6 +71,7 @@ public class RNPushNotificationListenerService extends GcmListenerService {
                     });
                     if (!mReactInstanceManager.hasStartedCreatingInitialContext()) {
                         // Construct it in the background
+                        wasReactContextCreatedByRnpnHack = true;
                         mReactInstanceManager.createReactContextInBackground();
                     }
                 }
