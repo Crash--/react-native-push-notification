@@ -27,7 +27,7 @@ import java.util.Random;
 
 public class RNPushNotification extends ReactContextBaseJavaModule implements ActivityEventListener {
     public static final String LOG_TAG = "RNPushNotification";// all logging should use this tag
-
+    public static boolean wasReactContextCreatedByRnpnHack = false;
     private RNPushNotificationHelper mRNPushNotificationHelper;
     private final Random mRandomNumberGenerator = new Random(System.currentTimeMillis());
     private RNPushNotificationJsDelivery mJsDelivery;
@@ -44,6 +44,7 @@ public class RNPushNotification extends ReactContextBaseJavaModule implements Ac
         mJsDelivery = new RNPushNotificationJsDelivery(reactContext);
 
         registerNotificationsRegistration();
+
     }
 
     @Override
